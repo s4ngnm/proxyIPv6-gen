@@ -1,4 +1,7 @@
 #!/bin/sh
+version=0.9.3
+sudo apt-get update && apt-get -y upgrade
+sudo apt-get install gcc make git -y
 random() {
   tr </dev/urandom -dc A-Za-z0-9 | head -c5
   echo
@@ -12,10 +15,10 @@ gen64() {
   echo "$1:$(ip64):$(ip64):$(ip64):$(ip64)"
 }
 install_3proxy() {
-  echo "installing 3proxy"
-  URL="https://github.com/z3APA3A/3proxy/archive/3proxy-0.8.6.tar.gz"
-  wget -qO- $URL | bsdtar -xvf-
-  cd 3proxy-3proxy-0.8.6
+  echo "installing 3proxy sangnm - Script by Sang Nguyen"
+  wget --no-check-certificate -O 3proxy-${version}.tar.gz https://github.com/z3APA3A/3proxy/archive/${version}.tar.gz
+  tar xzf 3proxy-${version}.tar.gz
+  cd 3proxy-${version}
   make -f Makefile.Linux
   mkdir -p /usr/local/etc/3proxy/{bin,logs,stat}
   cp src/3proxy /usr/local/etc/3proxy/bin/
@@ -28,11 +31,16 @@ install_3proxy() {
 gen_3proxy() {
   cat <<EOF
 daemon
-maxconn 1000
+maxconn 2000
+nserver 1.1.1.1
+nserver 8.8.4.4
+nserver 2001:4860:4860::8888
+nserver 2001:4860:4860::8844
 nscache 65536
 timeouts 1 5 30 60 180 1800 15 60
 setgid 65535
 setuid 65535
+stacksize 6291456
 flush
 auth strong
 
@@ -97,7 +105,8 @@ $(awk -F "/" '{print "ifconfig eth0 inet6 add " $5 "/64"}' ${WORKDATA})
 EOF
 }
 echo "installing apps"
-yum -y install gcc net-tools bsdtar zip >/dev/null
+#yum -y install gcc net-tools bsdtar zip >/dev/null
+apt-get install -y subnetcalc psmisc zip unzip curl jq net-tools > /dev/null
 
 install_3proxy
 
@@ -128,6 +137,7 @@ cat >>/etc/rc.local <<EOF
 bash ${WORKDIR}/boot_iptables.sh
 bash ${WORKDIR}/boot_ifconfig.sh
 ulimit -n 10048
+systemctl stop 3proxy > /dev/null && sleep 2 && systemctl start 3proxy > /dev/null
 service 3proxy start
 EOF
 
