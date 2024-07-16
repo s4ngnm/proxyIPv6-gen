@@ -2,6 +2,7 @@
 version=0.9.3
 sudo apt-get update && apt-get -y upgrade
 sudo apt-get install gcc make git -y
+apt-get install network-manager -y
 random() {
   tr </dev/urandom -dc A-Za-z0-9 | head -c5
   echo
@@ -137,6 +138,7 @@ cat >>/etc/rc.local <<EOF
 bash ${WORKDIR}/boot_iptables.sh
 bash ${WORKDIR}/boot_ifconfig.sh
 ulimit -n 10048
+systemctl restart NetworkManager.service
 systemctl stop 3proxy > /dev/null && sleep 2 && systemctl start 3proxy > /dev/null
 service 3proxy start
 EOF
